@@ -1,0 +1,97 @@
+---
+title: "Simulate Data Mischel et al. (1972)"
+author: "Simon van Baal"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(readr)
+library(dplyr)
+library(tidyr)
+library(here)
+
+```
+
+```{r simulate-data}
+
+# We will create data analogous to Mischel (1972), experiment 1. I will only
+# create data for reward-contingent conditions.
+
+df <-
+  tibble(
+    id = c(paste0("p", seq(1, 30, 1))),
+    condition = rep(c("no distraction", "toy", "think fun"), each = 10),
+    success = c(rep(0, 10), 
+                c(1, 1, 1, 1, 0, 0, 0, 0, 0, 0),
+                c(1, 1, 1, 1, 1, 1, 0, 0, 0, 0))
+  )
+
+# Average wait times in the Toy and Think about Fun Things conditions were
+# 8.59 and 12.12 mins respectively.
+
+# Reverse engineer mean times from graph:
+# 8 + 59 seconds / 60 = 8.9833 minutes on average, * 10 = 89.833 total wait time
+
+# We know successful trials have 15 mins wait time so we can calc the mean of
+# the rest. 
+meanToy <- (89.8333 - 4*15)/6 
+meanThinkFun <- (121.2 - 6*15)/4
+
+# First we set the seed so the process is reproducible
+set.seed(5)
+
+# No data available on the standard deviation - I'll assume 1.5 mins for now.
+sd = 1.5
+
+# Generate random normally distributed number sequence for the failure trials
+waitTimesToyRandom <- 
+  c(rnorm(6, mean = meanToy, sd = sd))
+waitTimesThinkFunRandom <- 
+  c(rnorm(4, mean = meanThinkFun, sd = sd))
+# assume 27 seconds for other condition - unclear from text
+waitTimesNoDistRandom <- 
+  c(rnorm(10, mean = .45, sd = .15))
+
+mean(waitTimesToyRandom)
+mean(waitTimesThinkFunRandom)
+mean(waitTimesNoDistRandom)
+
+# Small correction necessary due to introduced noise
+waitTimesThinkFunRandom <- 
+  waitTimesThinkFunRandom + .6
+
+# Add to data
+waitTimes <- c(
+  waitTimesNoDistRandom,
+  rep(15, 4),
+  waitTimesToyRandom,
+  rep(15, 6),
+  waitTimesThinkFunRandom
+)
+
+df <-
+  df %>%
+  mutate(waitTime = waitTimes)
+
+# Check if everything's right:
+
+df %>% 
+  group_by(condition) %>%
+  summarise(mean = mean(waitTime))
+# Close enough.
+
+
+```
+
+
+```{r write-csv}
+
+write_csv(df, 
+          here("data/simulated-data_exp1_mischel1972.csv"))
+
+
+```
+
+

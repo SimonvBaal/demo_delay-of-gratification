@@ -1,0 +1,34 @@
+---
+title: 'Assignment 1: Create and Visualise'
+author: "Simon van Baal"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Create a dataset
+
+You have access to the "create-data_mischel1972_tewa1.Rmd" file, where you see
+how I created some data loosely based on the information provided in the paper.
+
+Please do the same for Experiment 2 and visualise the data. 
+
+Pay attention to how I organised this directory - it helps make it so things 
+don't get lost. 
+
+## Tips
+Some useful tips that will help you work easier with R:
+
+- You can start a new chunk by pressing Ctrl+Alt+I (Mac: CMD+Opt+I). 
+
+- You can run a line by putting your cursor on the line and pressing Ctrl+Enter.
+
+- Good formatting of your code will help with readability. If you would like R to
+format a bunch of code for you, sorting out indentation and the like, press:
+Ctrl+Shift+A while selecting a bit of code.
+
+- You can make R not run code by selecting a bunch of it and pressing 
+Ctrl+Shift+C. If you press this again, it removes the "#", which will un-comment
+your code.
+
+
+
