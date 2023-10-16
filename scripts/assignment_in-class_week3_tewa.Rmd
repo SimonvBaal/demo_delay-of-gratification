@@ -10,7 +10,8 @@ output: html_document
 You have access to the "create-data_mischel1972_tewa1.Rmd" file, where you see
 how I created some data loosely based on the information provided in the paper.
 
-Please do the same for Experiment 2 and visualise the data. 
+Please do the same for Experiment 2 and visualise the data. When you are done,
+"Knit" your document so you can show it to everyone.
 
 Pay attention to how I organised this directory - it helps make it so things 
 don't get lost. 
@@ -30,5 +31,6 @@ Ctrl+Shift+A while selecting a bit of code.
 Ctrl+Shift+C. If you press this again, it removes the "#", which will un-comment
 your code.
 
-
+- Code chunks have options - useful ones tend to be include = TRUE/FALSE and 
+echo = TRUE/FALSE.
 

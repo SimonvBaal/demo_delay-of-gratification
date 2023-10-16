@@ -80,8 +80,11 @@ df <-
 df %>% 
   group_by(condition) %>%
   summarise(mean = mean(waitTime))
-# Close enough.
+# Close enough but such long numbers are unrealistic and annoying.
 
+df <-
+  df |>
+  mutate(waitTime = round(waitTime, 2)) 
 
 ```
 
