@@ -94,7 +94,6 @@ df <-
 write_csv(df, 
           here("data/simulated-data_exp1_mischel1972.csv"))
 
-
 ```
 
 
