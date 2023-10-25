@@ -14,7 +14,7 @@ how I created some data loosely based on the information provided in this paper:
 Mischel, W., Ebbesen, E. B., & Raskoff Zeiss, A. (1972). Cognitive and attentional mechanisms in delay of gratification. Journal of Personality and Social Psychology, 21(2), 204–218. https://doi.org/10.1037/h0032198
 
 Please read the Methods section for Experiment 2 and visualise the data based
-on an estimate eye-balling the graph. 
+on an estimate eye-balling the Figure. 
 
 When you are done, "Knit" your R Markdown file so you can show it to everyone.
 

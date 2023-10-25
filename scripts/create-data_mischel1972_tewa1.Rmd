@@ -62,11 +62,11 @@ mean(waitTimesToyRandom)
 mean(waitTimesThinkFunRandom)
 mean(waitTimesNoDistRandom)
 
-# Small correction necessary due to introduced noise
+# Small correction necessary due to introduced noise (add 36 seconds to all obs)
 waitTimesThinkFunRandom <- 
   waitTimesThinkFunRandom + .6
 
-# Add to data
+# Add wait times to data, being mindful of the ordering of the initial tibble.
 waitTimes <- c(
   waitTimesNoDistRandom,
   rep(15, 4),
@@ -76,13 +76,13 @@ waitTimes <- c(
 )
 
 df <-
-  df %>%
+  df |>
   mutate(waitTime = waitTimes)
 
 # Check if everything's right:
 
-df %>% 
-  group_by(condition) %>%
+df |> 
+  group_by(condition) |>
   summarise(mean = mean(waitTime))
 # Close enough but such long numbers are unrealistic and annoying.
 
