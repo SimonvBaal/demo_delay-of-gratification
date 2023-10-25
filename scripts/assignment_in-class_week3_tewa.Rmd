@@ -11,10 +11,17 @@ Thanks for going through the painful process of downloading Git and sorting out 
 
 You have access to the "create-data_mischel1972_tewa1.Rmd" file, where you see
 how I created some data loosely based on the information provided in this paper:
+
 Mischel, W., Ebbesen, E. B., & Raskoff Zeiss, A. (1972). Cognitive and attentional mechanisms in delay of gratification. Journal of Personality and Social Psychology, 21(2), 204–218. https://doi.org/10.1037/h0032198
 
 Please read the Methods section for Experiment 2 and visualise the data based
 on an estimate eye-balling the Figure. 
+
+To do this: 
+1. Create a new R Markdown file, in the top left of the RStudio window.
+2. Iteratively copy commands from the "create...Rmd file" and amend them to
+suit your assignment.
+3. Use ggplot2 to create plots of the data.
 
 When you are done, "Knit" your R Markdown file so you can show it to everyone.
 
