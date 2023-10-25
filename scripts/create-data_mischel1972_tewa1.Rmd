@@ -21,11 +21,15 @@ library(here)
 
 df <-
   tibble(
+    # Write ids for all participants (n=30)
     id = c(paste0("p", seq(1, 30, 1))),
+    # Create a variable to identify the three conditions
     condition = rep(c("no distraction", "toy", "think fun"), each = 10),
-    success = c(rep(0, 10), 
-                c(1, 1, 1, 1, 0, 0, 0, 0, 0, 0),
-                c(1, 1, 1, 1, 1, 1, 0, 0, 0, 0))
+    # Create a variable that indicates whether the subject waited successfully.
+    success = c(rep(0, 10), # No distraction
+                c(1, 1, 1, 1, 0, 0, 0, 0, 0, 0), # Subjects get toy
+                c(1, 1, 1, 1, 1, 1, 0, 0, 0, 0)) # Subject think of fun things
+    
   )
 
 # Average wait times in the Toy and Think about Fun Things conditions were
