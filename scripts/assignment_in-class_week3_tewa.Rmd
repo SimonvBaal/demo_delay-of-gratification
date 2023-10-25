@@ -7,7 +7,12 @@ output: html_document
 
 ## Create a dataset
 
-Thanks for going through the painful process of downloading Git and sorting out GitHub. Here's the assignment:
+Thanks for going through the painful process of downloading Git and sorting out GitHub. 
+
+Always open the README file first when you access a project - it will tell you
+how to get started.
+
+Here's the assignment:
 
 You have access to the "create-data_mischel1972_tewa1.Rmd" file, where you see
 how I created some data loosely based on the information provided in this paper:

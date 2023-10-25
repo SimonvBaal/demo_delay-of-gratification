@@ -19,7 +19,7 @@ library(here)
 # We will create data analogous to Mischel (1972), experiment 1. I will only
 # create data for reward-contingent conditions.
 
-df <-
+dfExp1 <-
   tibble(
     # Write ids for all participants (n=30)
     id = c(paste0("p", seq(1, 30, 1))),
@@ -75,27 +75,28 @@ waitTimes <- c(
   waitTimesThinkFunRandom
 )
 
-df <-
-  df |>
+dfExp1 <-
+  dfExp1 |>
   mutate(waitTime = waitTimes)
 
 # Check if everything's right:
 
-df |> 
+dfExp1 |> 
   group_by(condition) |>
   summarise(mean = mean(waitTime))
 # Close enough but such long numbers are unrealistic and annoying.
 
-df <-
-  df |>
+dfExp1 <-
+  dfExp1 |>
   mutate(waitTime = round(waitTime, 2)) 
 
 ```
 
 
-```{r write-csv}
 
-write_csv(df, 
+```{r write-csv}
+# Write a new csv file to store your data.
+write_csv(dfExp1, 
           here("data/simulated-data_exp1_mischel1972.csv"))
 
 ```
