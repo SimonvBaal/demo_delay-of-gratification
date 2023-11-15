@@ -1,0 +1,281 @@
+---
+title: "Power Analysis Mischel et al. (1972)"
+author: "Simon van Baal"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Power Analysis for Experiments
+
+When researchers test ideas, there are two types of error rates: Type I errors (false positives) and Type II errors (false negatives). We explicitly set acceptable Type I error rates by specifying an $\alpha$ level. However, setting acceptable false negative rates ($\beta$) has historically been done more implicitly, as it is more difficult to estimate. Usually we talk about this concept of false negative rates in terms of _statistical power_, sometimes referred to as 1-$\beta$. Statistical power refers to the proportion of times we will detect a significant difference, assuming it exists.
+
+To make sure we test ideas properly, we ideally want as high power as is financially viable and responsible. A good way of doing this is specifying the minimum effect size you are interested in and then, keeping in mind the context, setting the percentage of time you are willing to accept you will not attain a significant result. Often, however, the difference between 90% and 95% statistical power requires are larger jump in sample size than the difference between 80% and 85%. That diminishing marginal return to additional data is why financial viability and responsibility is especially important; is it really necessary to test 5000 participants, spend €50,000 on a small psychological effect?
+
+To calculate statistical power, researchers tend to either try to make realistic assumptions about the structure and distribution of the variables of interest or they collect pilot data to provide estimates of these features. We will take the former approach in this case. Using these assumptions, we can simulate the statistical tests we will ultimately run on the actual data.
+
+When we do this, we have an estimate of what our sample size should be and how many observations per participant we need to achieve reasonable statistical power. As a general guide: statistical power between 80-95% tend to be accepted, depending on the scenario. Exploratory studies should tend toward the lower bound, and replications should tend toward the higher bound, or ideally even 95% if feasible.
+
+In this .Rmd, I will provide you with the basics to get started conducting your own power analysis.
+
+```{r setup, include=TRUE}
+library(dplyr)
+library(tidyr)
+
+# For plotting
+library(ggplot2)
+
+# For power calculations
+library(pwr)
+```
+
+## Simple Power Analysis
+
+To start, we conduct a power analysis using the *pwr* package. You will see that it has some limitations regarding making the data realistic, but it is an easy way to get started.
+
+```{r power-analysis}
+
+# Provide estimates for means and standard deviations in DV for conditions
+meanThinkFun = 8
+meanControl = 5
+
+sdThinkFun = 3
+sdControl = 3
+
+# Calculate pooled standard deviation for estimation of Cohen's D
+pooledSd <- sqrt((sdControl ^ 2 + sdThinkFun ^ 2) / 2)
+
+# Estimate Cohen's D to see implied effect size.
+CohensDThinkFun <- (meanThinkFun - meanControl) / pooledSd
+
+# Run a function conducting power analysis for a t-test on this design.
+powerThinkFun <-
+  pwr.t.test(
+    d = CohensDThinkFun,
+    power = .9,
+    type = "paired",
+    alternative = "two.sided"
+  )
+plot(powerThinkFun)
+
+
+```
+
+```{r power-success}
+#Now we do the same for a simple chisquare test. 
+
+# We don't estimate a pooled sd, or a cohen's d here. 
+# See documentation ?pwr.chisq.test
+w = sqrt(sum(((.6 - .1) ^ 2 / .6), (.4 - .9) ^ 2 / .4))
+
+# Also need to calc df, which is given by df = (nrow-1)(ncol-1)
+
+# Run function. 
+cdPowerThinkFun <-
+  pwr.chisq.test(w = w, power = .9, df = 1)
+plot(cdPowerThinkFun)
+
+```
+
+### Limitations
+
+It should be clear that you don't have that much flexibility with this type of approach. Instead, we can simulate a dataset and then run the analysis on that dataset many times, to see how often the result comes back as significant.
+
+## Fancy Power Calculation
+
+If your data is a bit more complex, you may want to consider a more complex power calculation using home-made simulations. We will be doing this in the following section
+
+```{r function-for-running-simulations}
+
+# Create function for running power simulations in a between-subjects design
+
+powerSim <- function(nPerCondition, # n of participants per condition
+                     nTrials, # n of observations per participant
+                     nSims, # n of simulations, affects run-time.
+                     prSuccessTreatment = .6, # discounting parameter
+                     prSuccessControl = .1 # ditto but in control condition
+                     ) {
+  
+  # Set sum contrasts so modelling runs better and analysis is easier.
+  set_sum_contrasts()
+  
+  # Create fictitious participants.
+  dataSim <- 
+    tibble(
+      participantId = 
+        factor(rep(
+          paste0(c("treatment1_", "treatment2_", "control_"), sprintf('%0.3d', 1:(nPerCondition*3))),
+          each = nTrials # repeat by number of unique trials
+          )),
+      condition = 
+        factor(ifelse(
+          grepl("treatment1_", participantId),
+          "treatment1",
+          ifelse(
+            grepl("treatment2_", participantId),
+            "treatment2",
+            "control"
+          )
+        )),
+      trial_no =
+        paste0("trial_",
+               # alternative to sprintf solution above for adding leading zeroes
+          rep(
+          c(sprintf('%0.2d', 1:nTrials)),
+          times = (nPerCondition*3)
+        )
+        ),
+      block = 1
+    )
+
+  # set up parameters by condition
+  dataSim <- 
+    dataSim %>%
+    mutate(
+      # define probability of success
+      probSuccess = 
+        ifelse(condition == "control", 
+               prSuccessControl,
+               prSuccessTreatment))
+  
+  # create tibble for retaining z values, which are nicer to analyse than p values.
+  dataZRatio <- 
+    tibble(
+      successPropTreatment1 = numeric(),
+      successPropTreatment2 = numeric()
+    )
+  
+  for (i in 1:nSims) {
+    
+    # start by adding individual discounting differences, then generate choices
+    dataSim <-
+      dataSim %>%
+      group_by(participantId) %>%
+      mutate(
+        # Generate noise due to individual differences.
+        interceptParticipant =
+               rnorm(1, mean = 0, sd = .025),
+              # Make sure probability of success is between 0 and 1.
+             probSuccess = ifelse(probSuccess + interceptParticipant < 0, 
+                                  0,
+                                  ifelse(probSuccess + interceptParticipant > 1,
+                                         1, 
+                                         probSuccess + interceptParticipant))
+        ) %>%
+      ungroup() %>% # now simulate choices
+      mutate(
+      # Now enter trial results by drawing bernoulli trials
+      success = 
+        rbinom(nrow(dataSim), 1, probSuccess)
+      )
+    
+    #============================= Run models
+    
+    # The first should be a binomial model, but linear models run faster and return
+    # the same p-values.
+    
+    glmmSim <-
+      # Add suppress messages so the output isn't clogged with convergence info.
+      suppressMessages(
+        glmer(success ~
+             condition +
+             (1 | participantId),
+             family = "binomial",
+           data = dataSim)
+        )
+    
+    #============================ Post-hoc tests
+    
+    # Run post-hoc test, adjusting for multiple comparisons.
+    pairsSuccess <-
+      suppressMessages(pairs(emmeans(glmmSim, ~ condition),
+                             adjust = 'fdr',
+                             reverse = T))
+    
+    dataZRatio <-
+      dataZRatio %>%
+      add_row(successPropTreatment1 = round(summary(pairsSuccess)$z.ratio[1], 4),
+              successPropTreatment2 = round(summary(pairsSuccess)$z.ratio[2], 4))
+    
+    }
+  
+  return(dataZRatio)
+}
+
+
+```
+
+
+```{r run-function}
+# Set parameters
+nPerCondition = 20
+nTrials = 4
+nSims = 100
+prSuccessTreatment = .4
+prSuccessControl = .2
+
+# Define dataframe for storing values
+dataPower <- 
+  tibble(nPerCondition = numeric(),
+         nTrials = numeric(),
+         probSuccessTreatment = numeric(),
+         probSuccessControl = numeric(),
+         power = numeric())
+
+vectorNParticipants = seq(20, 30, 2)
+for (i in 1:length(vectorNParticipants)) {
+  
+  nPerCondition = vectorNParticipants[i]
+  # Run the power calculation for 1 set of parameters
+  results <- 
+    powerSim(nPerCondition = nPerCondition,
+           nTrials = nTrials,
+           nSims = 200,
+           prSuccessTreatment = prSuccessTreatment,
+           prSuccessControl = prSuccessControl)
+  
+  results <- 
+    results |> 
+    pivot_longer(cols = c(successPropTreatment1, successPropTreatment2),
+                 values_to = "z_ratio") |> 
+    mutate(condition = ifelse(grepl("Treatment1", name),
+                              "treatment1", 
+                              ifelse(grepl("Treatment2", name),
+                                     "treatment2",
+                                     "control")),
+           # I will assume alpha level of .05
+           significance = ifelse(z_ratio > 1.96, 
+                                 1,
+                                 0))
+  
+  dataPower <- 
+    dataPower |> 
+    add_row(nPerCondition = nPerCondition,
+           nTrials = nTrials,
+           probSuccessTreatment = prSuccessTreatment,
+           probSuccessControl = prSuccessControl,
+           power = mean(results$significance))
+}
+
+```
+
+
+
+```{r plot-results}
+
+# We get some pretty crazy z_ratios because of convergence issues.
+# For convenience, I'm just cutting the top off here.
+ggplot(results |> 
+         filter(z_ratio < 40, z_ratio > 0), 
+       aes(x = condition, 
+           y = z_ratio)) +
+  geom_boxplot(width = .2) +
+  geom_hline(aes(xintercept = 0,
+                 yintercept = 1.96))
+
+```
+```{r see-results}
+dataPower
+```
+
+
+
