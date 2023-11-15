@@ -11,7 +11,7 @@
 
 <meta name="author" content="Simon van Baal" />
 
-<meta name="date" content="2023-11-07" />
+<meta name="date" content="2023-11-15" />
 
 <title>Reanalysing Mischel 1972</title>
 
@@ -352,11 +352,27 @@ display: none;
 
 <h1 class="title toc-ignore">Reanalysing Mischel 1972</h1>
 <h4 class="author">Simon van Baal</h4>
-<h4 class="date">2023-11-07</h4>
+<h4 class="date">2023-11-15</h4>
 
 </div>
 
 
+<pre class="r"><code>library(readr)
+library(dplyr)
+library(tidyr)
+library(here)
+library(afex)
+library(emmeans)
+library(rmarkdown)
+
+# for assumption checking
+library(DHARMa)
+library(performance)
+
+# for plotting
+library(broom)
+library(ggplot2)
+theme_set(theme_light())</code></pre>
 <div id="analysis-of-simulated-data-based-on-mischel-1972" class="section level1">
 <h1>Analysis of Simulated Data Based on Mischel (1972)</h1>
 <p>In this R markdown file, we conduct an analysis of fictional data
@@ -364,10 +380,11 @@ based on Mischel (1972).</p>
 <p>We conduct the same analysis as the originals authors do, conduct
 assumption checks and consider whether we should perhaps run a different
 analysis instead.</p>
+<p>Use the DHARMa and performance packages for assumption checking.</p>
 <pre class="r"><code>df &lt;- 
   read_csv(here(&quot;data/simulated-data_exp1_mischel1972.csv&quot;))</code></pre>
 <pre><code>## Rows: 30 Columns: 4
-## ── Column specification ─────────────────────────────────────────────────────────
+## ── Column specification ───────────────────────────────────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
 ## chr (2): id, condition
 ## dbl (2): success, waitTime
@@ -395,15 +412,16 @@ table(df$condition, df$success)</code></pre>
 ##   think fun       4  6
 ##   toy             6  4</code></pre>
 <pre class="r"><code>chisquare &lt;- 
-  chisq.test(df$condition, df$success, simulate.p.value = T)
+  chisq.test(df$condition, 
+             df$success, 
+             simulate.p.value = T)
 
 chisquare</code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test with simulated p-value (based on 2000
-##  replicates)
+##  Pearson&#39;s Chi-squared test with simulated p-value (based on 2000 replicates)
 ## 
 ## data:  df$condition and df$success
-## X-squared = 8.4, df = NA, p-value = 0.02699</code></pre>
+## X-squared = 8.4, df = NA, p-value = 0.03048</code></pre>
 <p>The authors also conduct an ANOVA. No information on assumption
 checks is provided, so we conduct our own.</p>
 <pre class="r"><code># The authors also run an ANOVA. 
